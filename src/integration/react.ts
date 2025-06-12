@@ -39,7 +39,7 @@ export class PersistGate extends PureComponent<Props, State> {
     const persistorState = persistor.getState()
     
     if (process.env.NODE_ENV !== 'production') {
-      console.log('PersistGate: persistor state:', persistorState)
+      console.warn('[PersistGate] persistor state:', JSON.stringify(persistorState, null, 2))
     }
 
     // Check if we're already bootstrapped
@@ -55,13 +55,13 @@ export class PersistGate extends PureComponent<Props, State> {
         Promise.resolve(this.props.onBeforeLift())
           .then(() => {
             if (process.env.NODE_ENV !== 'production') {
-              console.log('PersistGate: onBeforeLift completed')
+              console.warn('[PersistGate] onBeforeLift completed')
             }
             this.setState({ bootstrapped: true })
           })
           .catch(error => {
             if (process.env.NODE_ENV !== 'production') {
-              console.error('PersistGate: onBeforeLift failed:', error)
+              console.warn('[PersistGate] onBeforeLift failed:', error)
             }
             // Even if onBeforeLift fails, we should still bootstrap
             this.setState({ bootstrapped: true })
@@ -85,13 +85,13 @@ export class PersistGate extends PureComponent<Props, State> {
   render(): ReactNode {
     if (process.env.NODE_ENV !== 'production') {
       if (typeof this.props.children === 'function' && this.props.loading)
-        console.error(
-          'redux-persist: PersistGate expects either a function child or loading prop, but not both. The loading prop will be ignored.'
+        console.warn(
+          '[PersistGate] expects either a function child or loading prop, but not both. The loading prop will be ignored.'
         )
     }
 
     if (process.env.NODE_ENV !== 'production') {
-      console.log('PersistGate: render with bootstrapped =', this.state.bootstrapped)
+      console.warn('[PersistGate] render with bootstrapped =', this.state.bootstrapped)
     }
 
     if (typeof this.props.children === 'function') {
