@@ -16,6 +16,7 @@ import type {
   PersistConfig,
   PersistState,
   Persistoid,
+  KeyAccessState,
 } from './types'
 
 import autoMergeLevel1 from './stateReconciler/autoMergeLevel1'
@@ -30,7 +31,7 @@ const DEFAULT_TIMEOUT = 5000
   - persisting a reducer which has nested _persist
   - handling actions that fire before reydrate is called
 */
-export default function persistReducer<S, A extends Action>(
+export default function persistReducer<S extends KeyAccessState, A extends Action>(
   config: PersistConfig<S>,
   baseReducer: Reducer<S, A>
 ): Reducer<S & PersistPartial, AnyAction> {
@@ -57,11 +58,11 @@ export default function persistReducer<S, A extends Action>(
   let _paused = true
   const conditionalUpdate = (state: any) => {
     // update the persistoid only if we are rehydrated and not paused
-    state._persist.rehydrated &&
-      _persistoid &&
-      !_paused &&
-      _persistoid.update(state)
-    return state
+    if (state._persist.rehydrated && _persistoid && !_paused) {
+      void _persistoid.update(state)
+    }
+
+    return state;
   }
 
   return (state: any, action: any) => {
@@ -87,9 +88,10 @@ export default function persistReducer<S, A extends Action>(
           _sealed = true
         }
       }
-      timeout &&
+
+      if (timeout) {
         setTimeout(() => {
-          !_sealed &&
+          if (!_sealed) {
             _rehydrate(
               undefined,
               new Error(
@@ -98,7 +100,9 @@ export default function persistReducer<S, A extends Action>(
                 }"`
               )
             )
+          }
         }, timeout)
+      }
 
       // @NOTE PERSIST resumes if paused.
       _paused = false
