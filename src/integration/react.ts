@@ -13,6 +13,14 @@ type State = {
   bootstrapped: boolean,
 }
 
+const logToNative = (message: string, data?: unknown) => {
+  if (data) {
+    console.log(`[PersistGate] ${message}`, JSON.stringify(data, null, 2));
+  } else {
+    console.log(`[PersistGate] ${message}`);
+  }
+};
+
 export class PersistGate extends PureComponent<Props, State> {
   static defaultProps = {
     children: null,
@@ -25,6 +33,7 @@ export class PersistGate extends PureComponent<Props, State> {
   _unsubscribe?: () => void
 
   componentDidMount(): void {
+    logToNative('componentDidMount')
     // Force initial check
     this.handlePersistorState()
     
@@ -38,39 +47,38 @@ export class PersistGate extends PureComponent<Props, State> {
     const { persistor } = this.props
     const persistorState = persistor.getState()
     
-    if (process.env.NODE_ENV !== 'production') {
-      console.warn('[PersistGate] persistor state:', JSON.stringify(persistorState, null, 2))
-    }
+    logToNative('persistor state:', persistorState)
 
     // Check if we're already bootstrapped
     if (this.state.bootstrapped) {
+      logToNative('already bootstrapped, returning')
       return
     }
 
     // Check if registry is empty (all reducers have rehydrated)
     const isBootstrapped = persistorState.registry.length === 0
+    logToNative('isBootstrapped:', isBootstrapped)
 
     if (isBootstrapped) {
       if (this.props.onBeforeLift) {
+        logToNative('calling onBeforeLift')
         Promise.resolve(this.props.onBeforeLift())
           .then(() => {
-            if (process.env.NODE_ENV !== 'production') {
-              console.warn('[PersistGate] onBeforeLift completed')
-            }
+            logToNative('onBeforeLift completed')
             this.setState({ bootstrapped: true })
           })
           .catch(error => {
-            if (process.env.NODE_ENV !== 'production') {
-              console.warn('[PersistGate] onBeforeLift failed:', error)
-            }
+            logToNative('onBeforeLift failed:', error)
             // Even if onBeforeLift fails, we should still bootstrap
             this.setState({ bootstrapped: true })
           })
       } else {
+        logToNative('no onBeforeLift, setting bootstrapped to true')
         this.setState({ bootstrapped: true })
       }
 
       if (this._unsubscribe) {
+        logToNative('unsubscribing')
         this._unsubscribe()
       }
     }
@@ -78,6 +86,7 @@ export class PersistGate extends PureComponent<Props, State> {
 
   componentWillUnmount(): void {
     if (this._unsubscribe) {
+      logToNative('componentWillUnmount - unsubscribing')
       this._unsubscribe()
     }
   }
@@ -85,14 +94,10 @@ export class PersistGate extends PureComponent<Props, State> {
   render(): ReactNode {
     if (process.env.NODE_ENV !== 'production') {
       if (typeof this.props.children === 'function' && this.props.loading)
-        console.warn(
-          '[PersistGate] expects either a function child or loading prop, but not both. The loading prop will be ignored.'
-        )
+        logToNative('expects either a function child or loading prop, but not both. The loading prop will be ignored.')
     }
 
-    if (process.env.NODE_ENV !== 'production') {
-      console.warn('[PersistGate] render with bootstrapped =', this.state.bootstrapped)
-    }
+    logToNative('render with bootstrapped = ' + this.state.bootstrapped)
 
     if (typeof this.props.children === 'function') {
       return this.props.children(this.state.bootstrapped)
