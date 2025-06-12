@@ -1,5 +1,5 @@
 {
-  "name": "@planfit/redux-persist",
+  "name": "redux-persist",
   "version": "6.2.2",
   "description": "persist and rehydrate redux stores",
   "main": "lib/index.js",
