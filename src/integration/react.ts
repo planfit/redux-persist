@@ -14,10 +14,12 @@ type State = {
 }
 
 const logToNative = (message: string, data?: unknown) => {
-  if (data) {
-    console.log(`[PersistGate] ${message}`, JSON.stringify(data, null, 2));
-  } else {
-    console.log(`[PersistGate] ${message}`);
+  if (process.env.NODE_ENV !== 'production') {
+    if (data) {
+      console.log(`[PersistGate] ${message}`, JSON.stringify(data, null, 2));
+    } else {
+      console.log(`[PersistGate] ${message}`);
+    }
   }
 };
 
